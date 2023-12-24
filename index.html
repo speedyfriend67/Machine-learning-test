@@ -4,9 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Multiple Linear Regression Example</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
   <h1>Multiple Linear Regression Example</h1>
+
+  <label for="featureInput">Enter Features (comma-separated):</label>
+  <input type="text" id="featureInput" placeholder="e.g., 6,7,8,9,10">
+  <button onclick="predictAndDraw()">Predict and Draw</button>
+
+  <div id="plotContainer">
+    <!-- Plot will be displayed here -->
+  </div>
 
   <script>
     // Multiple linear regression algorithm
@@ -63,26 +72,6 @@
       ];
     }
 
-    // Example data with 5 features
-    const XData = [
-      [1, 2, 3, 4, 5],
-      [2, 3, 4, 5, 6],
-      [3, 4, 5, 6, 7],
-      [4, 5, 6, 7, 8],
-      [5, 6, 7, 8, 9],
-    ];
-
-    const yData = [3, 5, 7, 9, 11];
-
-    // Apply multiple linear regression
-    const coefficients = multipleLinearRegression(XData, yData);
-
-    // Predict a new set of values
-    const newX = [6, 7, 8, 9, 10];
-    const predictedY = predict(coefficients, newX);
-
-    console.log(`Predicted Y for ${newX}: ${predictedY}`);
-
     // Prediction function
     function predict(coefficients, features) {
       const withBias = [1, ...features];
@@ -93,6 +82,64 @@
       }
 
       return result;
+    }
+
+    // Plotly scatter plot
+    function plotScatter(x, y, predictedY) {
+      const data = [
+        {
+          x,
+          y,
+          type: 'scatter',
+          mode: 'markers',
+          name: 'Actual Data',
+        },
+        {
+          x,
+          y: predictedY,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Predicted Data',
+        },
+      ];
+
+      const layout = {
+        title: 'Actual vs Predicted Data',
+        xaxis: { title: 'X' },
+        yaxis: { title: 'Y' },
+      };
+
+      Plotly.newPlot('plotContainer', data, layout);
+    }
+
+    // Function to predict and draw
+    function predictAndDraw() {
+      const featureInput = document.getElementById('featureInput');
+      const plotContainer = document.getElementById('plotContainer');
+
+      const features = featureInput.value.split(',').map(Number);
+
+      // Example data with 5 features
+      const XData = [
+        [1, 2, 3, 4, 5],
+        [2, 3, 4, 5, 6],
+        [3, 4, 5, 6, 7],
+        [4, 5, 6, 7, 8],
+        [5, 6, 7, 8, 9],
+      ];
+
+      const yData = [3, 5, 7, 9, 11];
+
+      // Apply multiple linear regression
+      const coefficients = multipleLinearRegression(XData, yData);
+
+      // Predict new value
+      const predictedY = predict(coefficients, features);
+
+      // Plot the scatter plot
+      plotScatter(XData[0], yData, [predict(coefficients, XData[0])]);
+
+      console.log(`Predicted Y for ${features}: ${predictedY}`);
     }
   </script>
 </body>
