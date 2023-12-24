@@ -3,47 +3,97 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Linear Regression Example</title>
+  <title>Multiple Linear Regression Example</title>
 </head>
 <body>
-  <h1>Linear Regression Example</h1>
+  <h1>Multiple Linear Regression Example</h1>
 
   <script>
-    // Simple linear regression algorithm
-    function linearRegression(x, y) {
-      const n = x.length;
+    // Multiple linear regression algorithm
+    function multipleLinearRegression(X, y) {
+      const n = X.length; // Number of data points
+      const numFeatures = X[0].length; // Number of features
 
-      // Calculate mean of x and y
-      const meanX = x.reduce((sum, val) => sum + val, 0) / n;
-      const meanY = y.reduce((sum, val) => sum + val, 0) / n;
+      // Add a bias term (intercept) to the features
+      const XWithBias = X.map(row => [1, ...row]);
 
-      // Calculate coefficients (slope and intercept)
-      let numerator = 0;
-      let denominator = 0;
+      // Transpose the feature matrix
+      const XTranspose = XWithBias[0].map((col, i) => XWithBias.map(row => row[i]));
 
-      for (let i = 0; i < n; i++) {
-        numerator += (x[i] - meanX) * (y[i] - meanY);
-        denominator += Math.pow(x[i] - meanX, 2);
-      }
+      // Calculate coefficients (weights)
+      const XtX = multiplyMatrices(XTranspose, XWithBias);
+      const XtY = multiplyMatrices(XTranspose, [y]);
 
-      const slope = numerator / denominator;
-      const intercept = meanY - slope * meanX;
+      const coefficients = multiplyMatrices(invertMatrix(XtX), XtY)[0];
 
-      return { slope, intercept };
+      return coefficients.slice(1); // Exclude the intercept (bias)
     }
 
-    // Example data
-    const xData = [1, 2, 3, 4, 5];
-    const yData = [2, 4, 5, 4, 5];
+    // Matrix multiplication
+    function multiplyMatrices(A, B) {
+      const result = [];
 
-    // Apply linear regression
-    const { slope, intercept } = linearRegression(xData, yData);
+      for (let i = 0; i < A.length; i++) {
+        result[i] = [];
+        for (let j = 0; j < B[0].length; j++) {
+          let sum = 0;
+          for (let k = 0; k < A[0].length; k++) {
+            sum += A[i][k] * B[k][j];
+          }
+          result[i][j] = sum;
+        }
+      }
 
-    // Predict a new value
-    const newX = 6;
-    const predictedY = slope * newX + intercept;
+      return result;
+    }
+
+    // Matrix inversion (only for 2x2 matrix in this example)
+    function invertMatrix(matrix) {
+      const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+
+      if (det === 0) {
+        throw new Error("Matrix inversion not possible");
+      }
+
+      const invDet = 1 / det;
+
+      return [
+        [matrix[1][1] * invDet, -matrix[0][1] * invDet],
+        [-matrix[1][0] * invDet, matrix[0][0] * invDet],
+      ];
+    }
+
+    // Example data with 5 features
+    const XData = [
+      [1, 2, 3, 4, 5],
+      [2, 3, 4, 5, 6],
+      [3, 4, 5, 6, 7],
+      [4, 5, 6, 7, 8],
+      [5, 6, 7, 8, 9],
+    ];
+
+    const yData = [3, 5, 7, 9, 11];
+
+    // Apply multiple linear regression
+    const coefficients = multipleLinearRegression(XData, yData);
+
+    // Predict a new set of values
+    const newX = [6, 7, 8, 9, 10];
+    const predictedY = predict(coefficients, newX);
 
     console.log(`Predicted Y for ${newX}: ${predictedY}`);
+
+    // Prediction function
+    function predict(coefficients, features) {
+      const withBias = [1, ...features];
+      let result = 0;
+
+      for (let i = 0; i < coefficients.length; i++) {
+        result += coefficients[i] * withBias[i];
+      }
+
+      return result;
+    }
   </script>
 </body>
 </html>
