@@ -72,21 +72,32 @@
 
       const yData = [3, 5, 7, 9, 11];
 
-      // Apply linear regression
-      const linearRegressionCoefficients = linearRegression(XData, yData);
+      // Log the input features
+      console.log('Input Features:', features);
 
-      // Apply neural network
-      const neuralNetworkWeights = await neuralNetwork(XData, yData);
+      try {
+        // Apply linear regression
+        const linearRegressionCoefficients = linearRegression(XData, yData);
+        console.log('Linear Regression Coefficients:', linearRegressionCoefficients);
 
-      // Predict values
-      const linearRegressionPrediction = predict(linearRegressionCoefficients, features);
-      const neuralNetworkPrediction = predict(neuralNetworkWeights, features);
+        // Apply neural network
+        const neuralNetworkWeights = await neuralNetwork(XData, yData);
+        console.log('Neural Network Weights:', neuralNetworkWeights);
 
-      // Plot the scatter plot
-      plotScatter(XData[0], yData, [linearRegressionPrediction, neuralNetworkPrediction]);
+        // Predict values
+        const linearRegressionPrediction = predict(linearRegressionCoefficients, features);
+        const neuralNetworkPrediction = predict(neuralNetworkWeights, features);
 
-      console.log(`Linear Regression Prediction for ${features}: ${linearRegressionPrediction}`);
-      console.log(`Neural Network Prediction for ${features}: ${neuralNetworkPrediction}`);
+        // Log the predictions
+        console.log('Linear Regression Prediction:', linearRegressionPrediction);
+        console.log('Neural Network Prediction:', neuralNetworkPrediction);
+
+        // Plot the scatter plot
+        plotScatter(XData[0], yData, [linearRegressionPrediction, neuralNetworkPrediction]);
+
+      } catch (error) {
+        console.error('Error:', error.message);
+      }
     }
 
     // Plotly scatter plot
@@ -110,40 +121,40 @@
 
       const layout = {
         title: 'Linear Regression vs Neural Network',
-        xaxis: { title: ‘X’ },
-yaxis: { title: ‘Y’ },
-};
+        xaxis: { title: 'X' },
+        yaxis: { title: 'Y' },
+      };
 
-  Plotly.newPlot('plotContainer', data, layout);
-}
-
-// Matrix multiplication (from the previous example)
-function multiplyMatrices(A, B) {
-  const result = [];
-  for (let i = 0; i < A.length; i++) {
-    result[i] = [];
-    for (let j = 0; j < B[0].length; j++) {
-      let sum = 0;
-      for (let k = 0; k < A[0].length; k++) {
-        sum += A[i][k] * B[k][j];
-      }
-      result[i][j] = sum;
+      Plotly.newPlot('plotContainer', data, layout);
     }
-  }
-  return result;
-}
 
-// Matrix inversion (from the previous example)
-function invertMatrix(matrix) {
-  const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
-  if (det === 0) {
-    throw new Error("Matrix inversion not possible");
-  }
-  const invDet = 1 / det;
-  return [
-    [matrix[1][1] * invDet, -matrix[0][1] * invDet],
-    [-matrix[1][0] * invDet, matrix[0][0] * invDet],
-  ];
+    // Matrix multiplication (from the previous example)
+    function multiplyMatrices(A, B) {
+      const result = [];
+      for (let i = 0; i < A.length; i++) {
+        result[i] = [];
+        for (let j = 0; j < B[0].length; j++) {
+          let sum = 0;
+          for (let k = 0; k < A[0].length; k++) {
+            sum += A[i][k] * B[k][j];
+          }
+          result[i][j] = sum;
+        }
+      }
+      return result;
+    }
+
+    // Matrix inversion (from the previous example)
+    function invertMatrix(matrix) {
+      const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+      if (det === 0) {
+        throw new Error("Matrix inversion not possible");
+      }
+      const invDet = 1 / det;
+      return [
+        [matrix[1][1] * invDet, -matrix[0][1] * invDet],
+[-matrix[1][0] * invDet, matrix[0][0] * invDet],
+];
 }
 
 // Prediction function (from the previous example)
