@@ -3,117 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multiple Linear Regression Example</title>
+  <title>Comparison: Linear Regression vs Neural Network</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.2"></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-  <h1>Multiple Linear Regression Example</h1>
+  <h1>Comparison: Linear Regression vs Neural Network</h1>
 
   <label for="featureInput">Enter Features (comma-separated):</label>
   <input type="text" id="featureInput" placeholder="e.g., 6,7,8,9,10">
-  <button onclick="predictAndDraw()">Predict and Draw</button>
+  <button onclick="compareModels()">Compare Models</button>
 
   <div id="plotContainer">
     <!-- Plot will be displayed here -->
   </div>
 
   <script>
-    // Multiple linear regression algorithm
-    function multipleLinearRegression(X, y) {
-      const n = X.length; // Number of data points
-      const numFeatures = X[0].length; // Number of features
-
-      // Add a bias term (intercept) to the features
+    // Linear regression algorithm (as in the previous example)
+    function linearRegression(X, y) {
+      const n = X.length;
+      const numFeatures = X[0].length;
       const XWithBias = X.map(row => [1, ...row]);
-
-      // Transpose the feature matrix
       const XTranspose = XWithBias[0].map((col, i) => XWithBias.map(row => row[i]));
-
-      // Calculate coefficients (weights)
       const XtX = multiplyMatrices(XTranspose, XWithBias);
       const XtY = multiplyMatrices(XTranspose, [y]);
-
       const coefficients = multiplyMatrices(invertMatrix(XtX), XtY)[0];
-
-      return coefficients.slice(1); // Exclude the intercept (bias)
+      return coefficients.slice(1);
     }
 
-    // Matrix multiplication
-    function multiplyMatrices(A, B) {
-      const result = [];
+    // Neural network model using TensorFlow.js
+    async function neuralNetwork(X, y) {
+      const model = tf.sequential({
+        layers: [
+          tf.layers.dense({ inputShape: [X[0].length], units: 1 }),
+        ],
+      });
 
-      for (let i = 0; i < A.length; i++) {
-        result[i] = [];
-        for (let j = 0; j < B[0].length; j++) {
-          let sum = 0;
-          for (let k = 0; k < A[0].length; k++) {
-            sum += A[i][k] * B[k][j];
-          }
-          result[i][j] = sum;
-        }
-      }
+      // Compile the model
+      model.compile({ optimizer: 'sgd', loss: 'meanSquaredError' });
 
-      return result;
+      // Convert input and output data to TensorFlow tensors
+      const xs = tf.tensor2d(X);
+      const ys = tf.tensor2d(y, [y.length, 1]);
+
+      // Train the model
+      await model.fit(xs, ys, { epochs: 100 });
+
+      // Get the weights of the model
+      const weights = model.getWeights()[0].dataSync();
+      return Array.from(weights);
     }
 
-    // Matrix inversion (only for 2x2 matrix in this example)
-    function invertMatrix(matrix) {
-      const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
-
-      if (det === 0) {
-        throw new Error("Matrix inversion not possible");
-      }
-
-      const invDet = 1 / det;
-
-      return [
-        [matrix[1][1] * invDet, -matrix[0][1] * invDet],
-        [-matrix[1][0] * invDet, matrix[0][0] * invDet],
-      ];
-    }
-
-    // Prediction function
-    function predict(coefficients, features) {
-      const withBias = [1, ...features];
-      let result = 0;
-
-      for (let i = 0; i < coefficients.length; i++) {
-        result += coefficients[i] * withBias[i];
-      }
-
-      return result;
-    }
-
-    // Plotly scatter plot
-    function plotScatter(x, y, predictedY) {
-      const data = [
-        {
-          x,
-          y,
-          type: 'scatter',
-          mode: 'markers',
-          name: 'Actual Data',
-        },
-        {
-          x,
-          y: predictedY,
-          type: 'scatter',
-          mode: 'lines',
-          name: 'Predicted Data',
-        },
-      ];
-
-      const layout = {
-        title: 'Actual vs Predicted Data',
-        xaxis: { title: 'X' },
-        yaxis: { title: 'Y' },
-      };
-
-      Plotly.newPlot('plotContainer', data, layout);
-    }
-
-    // Function to predict and draw
-    function predictAndDraw() {
+    // Comparison function
+    async function compareModels() {
       const featureInput = document.getElementById('featureInput');
       const plotContainer = document.getElementById('plotContainer');
 
@@ -130,17 +72,90 @@
 
       const yData = [3, 5, 7, 9, 11];
 
-      // Apply multiple linear regression
-      const coefficients = multipleLinearRegression(XData, yData);
+      // Apply linear regression
+      const linearRegressionCoefficients = linearRegression(XData, yData);
 
-      // Predict new value
-      const predictedY = predict(coefficients, features);
+      // Apply neural network
+      const neuralNetworkWeights = await neuralNetwork(XData, yData);
+
+      // Predict values
+      const linearRegressionPrediction = predict(linearRegressionCoefficients, features);
+      const neuralNetworkPrediction = predict(neuralNetworkWeights, features);
 
       // Plot the scatter plot
-      plotScatter(XData[0], yData, [predict(coefficients, XData[0])]);
+      plotScatter(XData[0], yData, [linearRegressionPrediction, neuralNetworkPrediction]);
 
-      console.log(`Predicted Y for ${features}: ${predictedY}`);
+      console.log(`Linear Regression Prediction for ${features}: ${linearRegressionPrediction}`);
+      console.log(`Neural Network Prediction for ${features}: ${neuralNetworkPrediction}`);
     }
+
+    // Plotly scatter plot
+    function plotScatter(x, y, predictions) {
+      const data = [
+        {
+          x,
+          y,
+          type: 'scatter',
+          mode: 'markers',
+          name: 'Actual Data',
+        },
+        {
+          x,
+          y: predictions,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Predicted Data',
+        },
+      ];
+
+      const layout = {
+        title: 'Linear Regression vs Neural Network',
+        xaxis: { title: ‘X’ },
+yaxis: { title: ‘Y’ },
+};
+
+  Plotly.newPlot('plotContainer', data, layout);
+}
+
+// Matrix multiplication (from the previous example)
+function multiplyMatrices(A, B) {
+  const result = [];
+  for (let i = 0; i < A.length; i++) {
+    result[i] = [];
+    for (let j = 0; j < B[0].length; j++) {
+      let sum = 0;
+      for (let k = 0; k < A[0].length; k++) {
+        sum += A[i][k] * B[k][j];
+      }
+      result[i][j] = sum;
+    }
+  }
+  return result;
+}
+
+// Matrix inversion (from the previous example)
+function invertMatrix(matrix) {
+  const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+  if (det === 0) {
+    throw new Error("Matrix inversion not possible");
+  }
+  const invDet = 1 / det;
+  return [
+    [matrix[1][1] * invDet, -matrix[0][1] * invDet],
+    [-matrix[1][0] * invDet, matrix[0][0] * invDet],
+  ];
+}
+
+// Prediction function (from the previous example)
+function predict(coefficients, features) {
+  const withBias = [1, ...features];
+  let result = 0;
+  for (let i = 0; i < coefficients.length; i++) {
+    result += coefficients[i] * withBias[i];
+  }
+  return result;
+}
+
   </script>
 </body>
 </html>
