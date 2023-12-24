@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linear Regression Example</title>
+</head>
+<body>
+  <h1>Linear Regression Example</h1>
+
+  <script>
+    // Simple linear regression algorithm
+    function linearRegression(x, y) {
+      const n = x.length;
+
+      // Calculate mean of x and y
+      const meanX = x.reduce((sum, val) => sum + val, 0) / n;
+      const meanY = y.reduce((sum, val) => sum + val, 0) / n;
+
+      // Calculate coefficients (slope and intercept)
+      let numerator = 0;
+      let denominator = 0;
+
+      for (let i = 0; i < n; i++) {
+        numerator += (x[i] - meanX) * (y[i] - meanY);
+        denominator += Math.pow(x[i] - meanX, 2);
+      }
+
+      const slope = numerator / denominator;
+      const intercept = meanY - slope * meanX;
+
+      return { slope, intercept };
+    }
+
+    // Example data
+    const xData = [1, 2, 3, 4, 5];
+    const yData = [2, 4, 5, 4, 5];
+
+    // Apply linear regression
+    const { slope, intercept } = linearRegression(xData, yData);
+
+    // Predict a new value
+    const newX = 6;
+    const predictedY = slope * newX + intercept;
+
+    console.log(`Predicted Y for ${newX}: ${predictedY}`);
+  </script>
+</body>
+</html>
